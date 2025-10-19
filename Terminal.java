@@ -119,6 +119,148 @@ public class Terminal {
                 System.out.println("Failed to create: " + newdir.getAbsolutePath());
         }
     }
+    
+    public void rmdir(String[] args) {
+        if (args == null || args.length == 0) {
+            System.out.println("Error: enter directory name");
+            return;
+        }
+
+        String argument = args[0];
+
+        if ( argument.equals("*") ) {
+
+            File currentDir = new File(currentPath);
+            // puts all directories in current directory in  a list
+            File[] subDirs = currentDir.listFiles(File::isDirectory);
+
+            if (subDirs == null || subDirs.length == 0) {
+                // checks if the list for subdirectories is empty
+                System.out.println("No subdirectories found");
+                return;
+            }
+
+            boolean deleted = false;
+            for (File dir : subDirs) {
+                // go through each subdirectory
+                String[] contents = dir.list();
+                // put them all in array
+                if (contents != null && contents.length == 0) {
+                    /* checks if there are any subdirectories in contents list to delete
+                     and see if those subdirectories are empty */
+                    if (dir.delete()) {
+                        System.out.println("Deleted empty directory: " + dir.getName());
+                        deleted = true;
+                    }
+                }
+            }
+            if (!deleted) System.out.println("No empty directories found");
+            return;
+        }
+
+        File dir;
+        // checks if argument given is full or relative(short) path
+        if (new File(argument).isAbsolute()) {
+            // given full path
+            dir = new File(argument);
+        } else {
+            // if no path given (short path) consider it the current working path
+            dir = new File(currentPath, argument);
+        }
+
+        // checks if directory exists
+        if (!dir.exists()) {
+            System.out.println("Directory not found: " + dir.getAbsolutePath());
+        }
+        // checks if it's a directory not a file
+        else if (!dir.isDirectory()) {
+            System.out.println("Error: Not a directory");
+        }
+
+        else {
+            // puts them in a list called contents
+            String[] contents = dir.list();
+            if (contents != null && contents.length == 0) {
+                /*  checks if there are directories to delete in contents list
+                  and if they are empty directories then attempt to delete them */
+                if (dir.delete()) {
+                    System.out.println("Directory deleted: " + dir.getAbsolutePath());
+                } else {
+                    System.out.println("Failed to delete: " + dir.getAbsolutePath());
+                }
+            } else {
+                System.out.println(dir.getName() + " is not empty");
+            }
+        }
+    }
+    
+    public void touch(String[] args) {
+        // create a file with full/relative path
+        if ( args == null || args.length == 0) {
+            System.out.println("Error: enter file name");
+            return;
+        }
+        String path = args[0];
+        File file = new File(path);
+
+        File parent = file.getParentFile();
+        //if no path given use the current working directory
+        if ( parent == null ) {
+            parent = new File(System.getProperty("user.dir"));
+        }
+
+        // if there is no directory with this name print error
+        if( !parent.exists() ) {
+            System.out.println("Error: Parent directory does not exist: " + parent.getPath());
+            return;
+        }
+
+        // if file with same name already exists print error
+        if ( file.exists() ) {
+            System.out.println("Error: A file named " + path + " already exists");
+            return;
+        }
+        try {
+            boolean created = file.createNewFile();
+            if (created) {
+                System.out.println("File " + path +  " created successfully" );
+            }
+            else{
+                System.out.println("File " + path +  " failed to be created" );
+            }
+
+        } catch (IOException e) {
+            System.out.println("touch: I/O error: " + e.getMessage());
+        }
+    }
+
+    public void rm(String[] args) {
+        if (args == null || args.length !=1 ) {
+            System.out.println("Error: enter file name");
+            return;
+        }
+        String filename = args[0];
+        File file = new File(currentPath, filename);
+        // check if file exists to remove it
+        if ( !file.exists() ){
+            System.out.println("Error: " + filename + " file not found");
+            return;
+        }
+        
+        // checks if file is a directory not a file 
+        if( file.isDirectory() ){
+            System.out.println("Error: cannot remove: " + filename + " is a directory");
+            return;
+        }
+
+        boolean deleted = file.delete();
+        if (deleted){
+            System.out.println("File deleted: " + filename );
+        }
+        else{
+            System.out.println("Failed to delete file: " + filename );
+        }
+    }
 
     public void chooseCommandAction() {
         String command = parser.getCommandName();
@@ -144,6 +286,19 @@ public class Terminal {
             case "exit":
                 System.out.println("Exiting...");
                 System.exit(0);
+                
+            case "rmdir":
+                rmdir();
+                break;
+                
+            case "rm":
+                rm();
+                break;
+                
+            case "touch":
+                touch();
+                break;
+                
             default:
                 System.out.println("There is no such command, please try again!");
                 break;
