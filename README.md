@@ -39,3 +39,8 @@ The program continues running until the user types `exit`.
 | **>>** | Redirects command output to a file (appends content if the file exists). |
 | **zip / unzip** | Compresses or extracts files and directories. |
 | **exit** | Exits the CLI program. |
+
+---
+
+## Contributors
+-[Rabab Mohamed](https://github.com/Rabab-Okasha)
