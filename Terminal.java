@@ -305,6 +305,28 @@ public class Terminal {
         }
     }
 
+    public void cat(String[] args) {
+        if (args.length == 0) {
+            System.out.println("Please enter at least one file name");
+            return;
+        }
+
+        for (String filename : args) {
+            File file = new File(pwd() + File.separator + filename);
+            if (!file.exists()) {
+                System.out.println("File does not exist: " + filename);
+                continue;
+            }
+            try (Scanner s = new Scanner(file)) {
+                while (s.hasNextLine()) {
+                    System.out.println(s.nextLine());
+                }
+            } catch (FileNotFoundException e) {
+                System.out.println("Error opening file: " + filename);
+            }
+        }
+    }
+
     public static void main(String[] args) {
         Terminal terminal = new Terminal();
         Scanner scanner = new Scanner(System.in);
