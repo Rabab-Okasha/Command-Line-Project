@@ -1,6 +1,8 @@
 import java.util.Arrays;
 import java.util.Scanner;
 import java.io.File;
+import java.io.*;
+import java.util.*;
 
 class Parser {
     String commandName;
@@ -130,7 +132,7 @@ public class Terminal {
 
         if ( argument.equals("*") ) {
 
-            File currentDir = new File(currentPath);
+            File currentDir = currentdir;
             // puts all directories in current directory in  a list
             File[] subDirs = currentDir.listFiles(File::isDirectory);
 
@@ -165,7 +167,7 @@ public class Terminal {
             dir = new File(argument);
         } else {
             // if no path given (short path) consider it the current working path
-            dir = new File(currentPath, argument);
+            dir = new File(currentdir, argument);
         }
 
         // checks if directory exists
@@ -240,7 +242,7 @@ public class Terminal {
             return;
         }
         String filename = args[0];
-        File file = new File(currentPath, filename);
+        File file = new File(currentdir, filename);
         // check if file exists to remove it
         if ( !file.exists() ){
             System.out.println("Error: " + filename + " file not found");
@@ -288,15 +290,15 @@ public class Terminal {
                 System.exit(0);
                 
             case "rmdir":
-                rmdir();
+                rmdir(args);
                 break;
                 
             case "rm":
-                rm();
+                rm(args);
                 break;
                 
             case "touch":
-                touch();
+                touch(args);
                 break;
                 
             default:
