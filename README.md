@@ -45,6 +45,6 @@ The program continues running until the user types `exit`.
 ## Contributors
 - [Rabab Mohamed](https://github.com/Rabab-Okasha)
 - [Malak Hassan](https://github.com/Malakhassan8)
-- [Martina Waleed]
+- [Martina Waleed](https://github.com/Martina20237010)
 - [Nour Hassan](https://github.com/Nourhasann)
 - [Nour Mohamed](https://github.com/Nour131)
