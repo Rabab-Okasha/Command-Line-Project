@@ -328,6 +328,7 @@ public class Terminal {
             }
         }
     }
+}
 
     public static void main(String[] args) {
         Terminal terminal = new Terminal();
@@ -344,5 +345,5 @@ public class Terminal {
         }
 
     }
-}
+
 
