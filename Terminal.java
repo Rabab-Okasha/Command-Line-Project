@@ -186,7 +186,7 @@ public class Terminal {
                 /*  checks if there are directories to delete in contents list
                   and if they are empty directories then attempt to delete them */
                 if (dir.delete()) {
-                    System.out.println("Directory deleted: " + dir.getAbsolutePath());
+                    System.out.println("Directory deleted: " + dir.getParentFile());
                 } else {
                     System.out.println("Failed to delete: " + dir.getAbsolutePath());
                 }
