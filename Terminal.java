@@ -204,11 +204,14 @@ public class Terminal {
         }
         String path = args[0];
         File file = new File(path);
+         if( !file.isAbsolute() ){
+            file = new File(currentdir, path);
+        }
 
         File parent = file.getParentFile();
         //if no path given use the current working directory
         if ( parent == null ) {
-            parent = new File(System.getProperty("user.dir"));
+            parent = currentdir;
         }
 
         // if there is no directory with this name print error
