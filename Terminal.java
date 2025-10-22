@@ -340,10 +340,6 @@ public class Terminal {
             case "mkdir":
                 mkdir();
                 break;
-
-            case "exit":
-                System.out.println("Exiting...");
-                System.exit(0);
                 
             case "rmdir":
                 rmdir(args);
@@ -356,6 +352,18 @@ public class Terminal {
             case "touch":
                 touch(args);
                 break;
+
+            case "cat":  
+                cat(args);
+                break;
+
+            case "zip":
+                zip();
+                break;
+
+            case "exit":
+                System.out.println("Exiting...");
+                System.exit(0);    
                 
             default:
                 System.out.println("There is no such command, please try again!");
