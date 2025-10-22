@@ -195,7 +195,99 @@ public class Terminal {
             }
         }
     }
+
+public void cp(File f1,File  f2){
+
+try{
     
+BufferedReader source =new BufferedReader(new FileReader(f1));  // read data from  the source file
+BufferedWriter dest =new BufferedWriter(new FileWriter(f2));   // dest file
+
+String line;  // add variable to read the file line by line 
+
+while ((line=source.readLine())!=null) {    // loop until the end of the file  to copy the first file to sec one 
+    
+     dest.write(line);
+     dest.newLine();
+
+   }
+dest.flush();   // tells the stream: "Don't wait for the buffer to be full. Send whatever data you have in the buffer right now."
+System.out.println("File copied successfully.");  // confirm message 
+}  
+
+
+
+catch(IOException e){  // catch any exceptions 
+System.out.println("Error: " + e.getMessage());
+}
+}
+
+
+public void cp_r(File dir1, File dir2) {
+        if (!dir1.exists()) {    //check if the dir is exist
+            System.out.println("Error: Source directory not found!");
+            return;
+        }
+
+        if (!dir1.isDirectory()) {  //check if this file is a directory
+            System.out.println("Error: Source is not a directory!");
+            return;
+        }
+
+        if (!dir2.exists()) {
+            dir2.mkdirs(); // edit
+        }
+
+        File[] files = dir1.listFiles();     //get each file in the dir in a array 
+        if (files != null) {  //check if the file is empty or not
+            for (File file : files) {
+                File newDest = new File(dir2, file.getName());  
+                if (file.isDirectory()) {
+                    cp_r(file, newDest);   // transfer the file to  dir2
+                } else {
+                    cp(file, newDest);   
+                }
+            }
+        }
+        else{
+            System.out.println("Source Directory is empty.");
+        }
+        System.out.println("Directory copied successfully!");
+    }
+
+
+public void wc(File f){
+if(!f.exists()){  //check if the file is exist
+    System.out.println("Error: the file not found!");
+    return;
+}
+
+int line_count=0;
+int word_count=0;
+int char_count=0;
+
+try(BufferedReader myfile =new BufferedReader(new FileReader(f))){
+    
+ String line_;
+
+while ((line_=myfile.readLine())!=null) {
+   line_count ++;
+   char_count+=line_.length()+1;
+   String[] words = line_.trim().split("\\s+");
+   if (!line_.trim().isEmpty()) {
+       word_count += words.length;
+    }
+   }
+   System.out.println(line_count+" "+word_count+" "+char_count+" "+f.getName());
+
+}
+catch(IOException e ){
+System.out.println("Error: "+e.getMessage());
+
+}    
+
+}
+
     public void touch(String[] args) {
         // create a file with full/relative path
         if ( args == null || args.length == 0) {
@@ -204,14 +296,11 @@ public class Terminal {
         }
         String path = args[0];
         File file = new File(path);
-         if( !file.isAbsolute() ){
-            file = new File(currentdir, path);
-        }
 
         File parent = file.getParentFile();
         //if no path given use the current working directory
         if ( parent == null ) {
-            parent = currentdir;
+            parent = new File(System.getProperty("user.dir"));
         }
 
         // if there is no directory with this name print error
@@ -331,6 +420,33 @@ public class Terminal {
             case "pwd":
                 System.out.println(pwd()); // printing the string returned from the method
                 break;
+
+            case "cp":
+                    if (args.length == 2) {
+                        cp(new File(args[0]), new File(args[1]));
+                    } else if (args.length == 3 && args[0].equals("-r")) {
+                        cp_r(new File(args[1]), new File(args[2]));
+                    } else {
+                        System.out.println("Usage: cp [ -r ] <source> <destination>");
+                    }
+                    break;    
+
+            case "cp_r":
+                   if (args.length == 2) {
+                       cp_r(new File(args[0]), new File(args[1]));
+                   }   
+                   else {
+                       System.out.println("Usage: cp_r <sourceDirectory> <destinationDirectory>");
+                   }
+                   break;    
+
+                case "wc":
+                    if (args.length == 1) {
+                        wc(new File(args[0]));
+                    } else {
+                        System.out.println("Usage: wc <filename>");
+                    }
+                    break;     
 
             case "cd":
                 cd();
