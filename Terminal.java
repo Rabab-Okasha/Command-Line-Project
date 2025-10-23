@@ -76,7 +76,7 @@ public class Terminal {
         }
     }
 
-    public void ls() {
+    public string ls() {
         // create file object points to current directory
         File file = currentdir;
         String[] files = file.list();
@@ -86,13 +86,14 @@ public class Terminal {
         else {
             // Arrays is a core utility class in java
             Arrays.sort(files); //You don’t create an Arrays object — instead, you call its static methods directly
-
-            for (int i = 0; i < files.length; i++) {
-                System.out.println(files[i]);
-
-                //OR "use range based for loop"
-                // for(String file : files)
-                // System.out.println(file);
+            // create stringBuilder to store the result string init 
+            StringBuilder sb = new StringBuilder();
+            for(String f: files){
+                // appedn each name followed by a newline
+                sb.append(f).append("\n");
+            }
+            //convert stirngbuilder to a string and return it 
+            return sb.toString();
             }
         }
     }
