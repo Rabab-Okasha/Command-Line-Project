@@ -100,13 +100,13 @@ public class Terminal {
         }
     }
 
-    public string ls() {
+    public String ls() {
         // create file object points to current directory
         File file = currentdir;
         String[] files = file.list();
 
         if (files == null)
-            System.out.println("Directory is empty or can't be accessed!");
+            return("Directory is empty or can't be accessed!");
         else {
             // Arrays is a core utility class in java
             Arrays.sort(files); //You don’t create an Arrays object — instead, you call its static methods directly
