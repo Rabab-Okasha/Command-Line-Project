@@ -575,7 +575,7 @@ System.out.println("Error: "+e.getMessage());
                 break;
 
             case "ls":
-                ls();
+                output = ls();
                 break;
 
             case "mkdir":
