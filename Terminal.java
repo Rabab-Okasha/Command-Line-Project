@@ -96,7 +96,6 @@ public class Terminal {
             return sb.toString();
             }
         }
-    }
 
     public void mkdir() {
         // if the user didn't enter directory name
