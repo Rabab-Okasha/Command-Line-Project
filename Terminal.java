@@ -7,6 +7,8 @@ import java.util.zip.*;
 class Parser {
     String commandName;
     String[] args;
+    String outputFile = null;
+    boolean appendMode = false;
 
     public boolean parse(String input) {
         // tirm() remove the whitespaces before and after the string
@@ -18,14 +20,36 @@ class Parser {
 
         commandName = tokens[0];
         args = new String[tokens.length - 1];// make size of args without the first word (command)
+        outputFile = null;
+        appendMode = false;
+        int argCount = 0;
 
         // make i begains with 1, to take args only not first word (command) in tokens array
-        for (int i = 1; i < tokens.length; i++)
-            args[i - 1] = tokens[i];
+        for (int i = 1; i < tokens.length; i++) {
+            if (tokens[i].equals(">") || tokens[i].equals(">>")) {
+                appendMode = tokens[i].equals(">>");
+                if (i + 1 < tokens.length) {
+                    outputFile = tokens[i + 1];
+                } else {
+                    System.out.println("Error: Missing file name after " + tokens[i]);
+                    return false;
+                }
+                break; // stop parsing after redirection
+            } else {
+                args[argCount++] = tokens[i];
+            }
+        }
 
+        args = Arrays.copyOf(args, argCount);
         return true;
     }
+    public String getOutputFile() {
+        return outputFile;
+    }
 
+    public boolean isAppendMode() {
+        return appendMode;
+    }
     public String getCommandName() {
         return commandName;
     }
@@ -377,11 +401,32 @@ System.out.println("Error: "+e.getMessage());
             }
         }
     }
+    
+    public void handleRedirection(String output) {
+        String outputFile = parser.getOutputFile();
+        boolean append = parser.isAppendMode();
 
-    public void zip() {
-        // Get the class name and assume it's the current Java file
-        String sourceFileName = "Terminal.java";
-        String zipFileName = "Terminal.zip";
+        if (outputFile == null) {
+            System.out.print(output); // print normally to console
+        } else {
+            File file = new File(currentdir, outputFile);
+            try (FileWriter fw = new FileWriter(file, append);
+                 BufferedWriter bw = new BufferedWriter(fw)) {
+                bw.write(output);
+            } catch (IOException e) {
+                System.out.println("Redirection error: " + e.getMessage());
+            }
+        }
+    }
+
+    public void zip(String[] args) {
+        // If the user didn’t type a file name, show an error
+        if (args == null || args.length == 0) {
+            System.out.println("Error: please enter a file name to zip");
+            return;
+        }
+        String sourceFileName = args[0];
+        String zipFileName = sourceFileName + ".zip";
 
         File sourceFile = new File(currentdir, sourceFileName);
 
@@ -410,11 +455,88 @@ System.out.println("Error: "+e.getMessage());
         } catch (IOException e) {
             System.out.println("Error while zipping: " + e.getMessage());
         }
-    } 
+    }
+
+    public void unzip(String[] args) {
+        File zipFile = null;
+
+        // Case 1: no parameters -> unzip first .zip file in current directory
+        if (args.length == 0) {
+            File[] zipFiles = currentdir.listFiles((dir, name) -> name.toLowerCase().endsWith(".zip"));
+
+            if (zipFiles == null || zipFiles.length == 0) {
+                System.out.println("No .zip files found in current directory: " + currentdir.getAbsolutePath());
+                return;
+            }
+
+            zipFile = zipFiles[0]; // pick the first zip file found
+        }
+        // Case 2: unzip <filename>
+        else {
+            String zipFileName = args[0];
+            if (!zipFileName.toLowerCase().endsWith(".zip")) {
+                zipFileName += ".zip";
+            }
+
+            zipFile = new File(currentdir, zipFileName);
+
+            if (!zipFile.exists()) {
+                System.out.println("Error: File not found - " + zipFile.getAbsolutePath());
+                return;
+            }
+        }
+
+        // --- Unzipping process ---
+        System.out.println("Unzipping: " + zipFile.getName());
+        File destDir = currentdir; // Unzip into current directory
+
+        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile))) {
+            ZipEntry zipEntry;
+            while ((zipEntry = zis.getNextEntry()) != null) {
+                File newFile = new File(destDir, zipEntry.getName());
+
+                // Zip slip protection
+                String destDirPath = destDir.getCanonicalPath();
+                String newFilePath = newFile.getCanonicalPath();
+                if (!newFilePath.startsWith(destDirPath + File.separator)) {
+                    System.out.println("Skipped suspicious entry: " + zipEntry.getName());
+                    zis.closeEntry();
+                    continue;
+                }
+
+                if (zipEntry.isDirectory()) {
+                    if (!newFile.isDirectory() && !newFile.mkdirs()) {
+                        System.out.println("Failed to create directory " + newFile);
+                    }
+                } else {
+                    File parent = newFile.getParentFile();
+                    if (!parent.exists() && !parent.mkdirs()) {
+                        System.out.println("Failed to create directory for file " + newFile);
+                        continue;
+                    }
+
+                    try (FileOutputStream fos = new FileOutputStream(newFile)) {
+                        byte[] buffer = new byte[1024];
+                        int len;
+                        while ((len = zis.read(buffer)) > 0) {
+                            fos.write(buffer, 0, len);
+                        }
+                    }
+                }
+
+                zis.closeEntry();
+            }
+
+            System.out.println("Successfully unzipped: " + zipFile.getName());
+        } catch (IOException e) {
+            System.out.println("Error while unzipping: " + e.getMessage());
+        }
+    }
 
     public void chooseCommandAction() {
         String command = parser.getCommandName();
         String[] args = parser.getArgs();
+        String output = ""; // to check if there > or >> or not
 
         switch (command) {
             case "pwd":
@@ -477,7 +599,11 @@ System.out.println("Error: "+e.getMessage());
                 break;
 
             case "zip":
-                zip();
+                zip(args);
+                break;
+
+            case "unzip":
+                unzip(args);
                 break;
 
             case "exit":
@@ -488,6 +614,8 @@ System.out.println("Error: "+e.getMessage());
                 System.out.println("There is no such command, please try again!");
                 break;
         }
+         handleRedirection(output);
+
     }
 
     public static void main(String[] args) {
