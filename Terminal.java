@@ -260,6 +260,13 @@ System.out.println("Error: " + e.getMessage());
 
 
 public void cp_r(File dir1, File dir2) {
+    // if directory paths are relative(short) paths resolve it to current directory
+        if(!dir1.isAbsolute())
+            dir1 = new File(currentdir, dir1.getPath());
+
+        if(!dir2.isAbsolute())
+            dir2 = new File(currentdir, dir2.getPath());
+    
         if (!dir1.exists()) {    //check if the dir is exist
             System.out.println("Error: Source directory not found!");
             return;
