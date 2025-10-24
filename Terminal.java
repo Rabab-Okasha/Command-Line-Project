@@ -211,7 +211,7 @@ public class Terminal {
                   and if they are empty directories then attempt to delete them */
                 if (dir.delete()) {
                     System.out.println("Directory deleted: " + dir.getParentFile());
-                } else {
+                }else {
                     System.out.println("Failed to delete: " + dir.getAbsolutePath());
                 }
             } else {
