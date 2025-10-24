@@ -222,6 +222,18 @@ public class Terminal {
 
 public void cp(File f1,File  f2){
 
+    // if file paths are relative(short) paths resolve it to current directory
+        if(!f1.isAbsolute())
+            f1 = new File(currentdir, f1.getPath());
+
+        if(!f2.isAbsolute())
+            f2 = new File(currentdir, f2.getPath());
+        
+        // if source file doesn't exist show error
+        if(!f1.exists()){
+            System.out.println("Error: " + f1.getPath() + " does not exist");
+        }
+
 try{
     
 BufferedReader source =new BufferedReader(new FileReader(f1));  // read data from  the source file
