@@ -485,6 +485,62 @@ System.out.println("Error: "+e.getMessage());
         }
     }
 
+    public void zip_r(String[] args) {
+        if (args == null || args.length == 0) {
+            System.out.println("Error: please enter a folder name to zip");
+            return;
+        }
+
+        String sourceName = args[0];
+        String zipFileName = sourceName + ".zip";
+        File sourceDir = new File(currentdir, sourceName);
+
+        //Check if the directory exists
+        if (!sourceDir.exists()) {
+            System.out.println("Error: Folder not found - " + sourceDir.getAbsolutePath());
+            return;
+        }
+
+        //Ensure it's a directory (not a file)
+        if (!sourceDir.isDirectory()) {
+            System.out.println("Error: The provided name is not a directory");
+            return;
+        }
+
+        try (
+                FileOutputStream fos = new FileOutputStream(new File(currentdir, zipFileName));
+                ZipOutputStream zos = new ZipOutputStream(fos)
+        ) {
+            byte[] buffer = new byte[1024];
+
+            //Walk recursively through directory and add files
+            Files.walk(sourceDir.toPath())
+                    .filter(path -> !Files.isDirectory(path))
+                    .forEach(path -> {
+                        try (FileInputStream fis = new FileInputStream(path.toFile())) {
+                            // Preserve folder structure inside zip
+                            String zipEntryName = sourceDir.toPath().relativize(path).toString().replace("\\", "/");
+                            ZipEntry entry = new ZipEntry(zipEntryName);
+                            zos.putNextEntry(entry);
+
+                            int len;
+                            while ((len = fis.read(buffer)) > 0) {
+                                zos.write(buffer, 0, len);
+                            }
+
+                            zos.closeEntry();
+                        } catch (IOException e) {
+                            System.out.println("Error adding file: " + path + " -> " + e.getMessage());
+                        }
+                    });
+
+            System.out.println("Folder zipped successfully to: " + zipFileName);
+
+        } catch (IOException e) {
+            System.out.println("Error while zipping: " + e.getMessage());
+        }
+    }
+
     public void unzip(String[] args) {
         File zipFile = null;
 
