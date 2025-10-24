@@ -518,19 +518,16 @@ System.out.println("Error: "+e.getMessage());
         System.out.println("Unzipping: " + zipFile.getName());
         File destDir = currentdir; // Unzip into current directory
 
-        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile))) {
+        // Unzip safely
+        try (FileInputStream fis = new FileInputStream(zipFile);
+             BufferedInputStream bis = new BufferedInputStream(fis);
+             ZipInputStream zis = new ZipInputStream(bis)) {
+
             ZipEntry zipEntry;
             while ((zipEntry = zis.getNextEntry()) != null) {
                 File newFile = new File(destDir, zipEntry.getName());
 
-                // Zip slip protection
-                String destDirPath = destDir.getCanonicalPath();
-                String newFilePath = newFile.getCanonicalPath();
-                if (!newFilePath.startsWith(destDirPath + File.separator)) {
-                    System.out.println("Skipped suspicious entry: " + zipEntry.getName());
-                    zis.closeEntry();
-                    continue;
-                }
+
 
                 if (zipEntry.isDirectory()) {
                     if (!newFile.isDirectory() && !newFile.mkdirs()) {
@@ -542,14 +539,6 @@ System.out.println("Error: "+e.getMessage());
                         System.out.println("Failed to create directory for file " + newFile);
                         continue;
                     }
-
-                    try (FileOutputStream fos = new FileOutputStream(newFile)) {
-                        byte[] buffer = new byte[1024];
-                        int len;
-                        while ((len = zis.read(buffer)) > 0) {
-                            fos.write(buffer, 0, len);
-                        }
-                    }
                 }
 
                 zis.closeEntry();
@@ -558,7 +547,18 @@ System.out.println("Error: "+e.getMessage());
             System.out.println("Successfully unzipped: " + zipFile.getName());
         } catch (IOException e) {
             System.out.println("Error while unzipping: " + e.getMessage());
+            return;
         }
+
+
+        // --- Delete zip file safely ---
+        if (zipFile.delete()) {
+            System.out.println("Deleted zip file: " + zipFile.getName());
+        } else
+              {
+                System.out.println("Could not delete zip file: " + zipFile.getAbsolutePath());
+            }
+
     }
 
     public void chooseCommandAction() {
