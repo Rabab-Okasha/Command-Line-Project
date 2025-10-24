@@ -541,59 +541,74 @@ System.out.println("Error: "+e.getMessage());
         }
     }
 
-    public void unzip(String[] args) {
-        File zipFile = null;
+  public void unzip(String[] args) {
+        File zipFile;
+        File destDir = currentdir;
 
-        // Case 1: no parameters -> unzip first .zip file in current directory
-        if (args.length == 0) {
-            File[] zipFiles = currentdir.listFiles((dir, name) -> name.toLowerCase().endsWith(".zip"));
-
-            if (zipFiles == null || zipFiles.length == 0) {
-                System.out.println("No .zip files found in current directory: " + currentdir.getAbsolutePath());
-                return;
-            }
-
-            zipFile = zipFiles[0]; // pick the first zip file found
-        }
-        // Case 2: unzip <filename>
-        else {
-            String zipFileName = args[0];
-            if (!zipFileName.toLowerCase().endsWith(".zip")) {
-                zipFileName += ".zip";
-            }
-
-            zipFile = new File(currentdir, zipFileName);
-
-            if (!zipFile.exists()) {
-                System.out.println("Error: File not found - " + zipFile.getAbsolutePath());
-                return;
-            }
+        // validate arguments
+        if (args == null || args.length == 0) {
+            System.out.println("Error: please enter a .zip file name to unzip");
+            return;
         }
 
-        // --- Unzipping process ---
-        System.out.println("Unzipping: " + zipFile.getName());
-        File destDir = currentdir; // Unzip into current directory
+        // parse zip file name
+        String zipFileName = args[0];
+        if (!zipFileName.toLowerCase().endsWith(".zip")) {
+            zipFileName += ".zip";
+        }
+        zipFile = new File(currentdir, zipFileName);
 
-        // Unzip safely
+        if (!zipFile.exists()) {
+            System.out.println("Error: File not found - " + zipFile.getAbsolutePath());
+            return;
+        }
+
+        // handle -d path
+        if (args.length >= 3 && args[1].equals("-d")) {
+            destDir = new File(args[2]);
+
+            // if destination is relative path, resolve it relative to currentdir
+            if (!destDir.isAbsolute()) {
+                destDir = new File(currentdir, args[2]);
+            }
+
+            // create directory if it doesn’t exist
+            if (!destDir.exists() && !destDir.mkdirs()) {
+                System.out.println("Error: Could not create destination directory " + destDir.getAbsolutePath());
+                return;
+            }
+        }
+
+        System.out.println("Unzipping: " + zipFile.getName() + " → " + destDir.getAbsolutePath());
+
+        //Unzipping process
         try (FileInputStream fis = new FileInputStream(zipFile);
              BufferedInputStream bis = new BufferedInputStream(fis);
              ZipInputStream zis = new ZipInputStream(bis)) {
 
             ZipEntry zipEntry;
+            byte[] buffer = new byte[1024];
+
             while ((zipEntry = zis.getNextEntry()) != null) {
                 File newFile = new File(destDir, zipEntry.getName());
 
-
-
                 if (zipEntry.isDirectory()) {
                     if (!newFile.isDirectory() && !newFile.mkdirs()) {
-                        System.out.println("Failed to create directory " + newFile);
+                        System.out.println("Failed to create directory: " + newFile);
                     }
                 } else {
                     File parent = newFile.getParentFile();
                     if (!parent.exists() && !parent.mkdirs()) {
-                        System.out.println("Failed to create directory for file " + newFile);
+                        System.out.println("Failed to create directory for file: " + newFile);
                         continue;
+                    }
+
+                    // write extracted file
+                    try (FileOutputStream fos = new FileOutputStream(newFile)) {
+                        int len;
+                        while ((len = zis.read(buffer)) > 0) {
+                            fos.write(buffer, 0, len);
+                        }
                     }
                 }
 
@@ -606,15 +621,12 @@ System.out.println("Error: "+e.getMessage());
             return;
         }
 
-
-        // --- Delete zip file safely ---
+        // delete zip file
         if (zipFile.delete()) {
             System.out.println("Deleted zip file: " + zipFile.getName());
-        } else
-              {
-                System.out.println("Could not delete zip file: " + zipFile.getAbsolutePath());
-            }
-
+        } else {
+            System.out.println("Could not delete zip file: " + zipFile.getAbsolutePath());
+        }
     }
 
     public void chooseCommandAction() {
