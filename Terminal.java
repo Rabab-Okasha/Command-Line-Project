@@ -300,6 +300,10 @@ public void cp_r(File dir1, File dir2) {
 
 
 public void wc(File f){
+// resolve relative (short) path using current directory
+if(!f.isAbsolute())
+    f = new File(currentdir, f.getPath());
+    
 if(!f.exists()){  //check if the file is exist
     System.out.println("Error: the file not found!");
     return;
